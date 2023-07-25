@@ -1,0 +1,134 @@
+import NextAuth from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import TwitterProvider from "next-auth/providers/twitter";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import type { NextAuthOptions } from "next-auth";
+import prisma from "@/modules/db";
+import { waitUntil } from "async-wait-until";
+
+import {
+  CreateCustomer,
+  CreateCustomerWallet,
+} from "@/mutations/customer.graphql";
+import {
+  CreateCustomerInput,
+  CreateCustomerPayload,
+  CreateCustomerWalletPayload,
+  CreateCustomerWalletInput,
+  AssetType,
+  Project,
+} from "@/graphql.types";
+import db from "@/modules/db";
+import holaplex from "@/modules/holaplex";
+import { GetCustomerTreasury } from "@/queries/customer.graphql";
+
+interface GetCustomerTreasuryData {
+  project: Pick<Project, "customer">;
+}
+
+interface GetCustomerTreasuryVars {
+  project: string;
+  customer: string;
+}
+
+interface CreateCustomerData {
+  createCustomer: CreateCustomerPayload;
+}
+
+interface CreateCustomerVars {
+  input: CreateCustomerInput;
+}
+
+interface CreateCustomerWalletData {
+  createCustomerWallet: CreateCustomerWalletPayload;
+}
+
+interface CreateCustomerWalletVars {
+  input: CreateCustomerWalletInput;
+}
+
+function customerTreasuryReady(customer: string) {
+  return async function checkCustomerTreasuryReady() {
+    const { data } = await holaplex.query<
+      GetCustomerTreasuryData,
+      GetCustomerTreasuryVars
+    >({
+      fetchPolicy: "network-only",
+      query: GetCustomerTreasury,
+      variables: {
+        project: process.env.HOLAPLEX_PROJECT_ID as string,
+        customer,
+      },
+    });
+
+    return data.project.customer?.treasury?.id;
+  };
+}
+
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID as string,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    }),
+    TwitterProvider({
+      clientId: process.env.TWITTER_CLIENT_ID as string,
+      clientSecret: process.env.TWITTER_CLIENT_SECRET as string,
+      //version: '2.0' // opt-in to Twitter OAuth 2.0
+    }),
+  ],
+  events: {
+    async createUser({ user }) {
+      const createCustomerResponse = await holaplex.mutate<
+        CreateCustomerData,
+        CreateCustomerVars
+      >({
+        mutation: CreateCustomer,
+        variables: {
+          input: {
+            project: process.env.HOLAPLEX_PROJECT_ID,
+          },
+        },
+      });
+
+      const customer = createCustomerResponse.data?.createCustomer.customer;
+
+      const me = await db.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          holaplexCustomerId: customer?.id,
+        },
+      });
+
+      await waitUntil(customerTreasuryReady(customer?.id as string), {
+        intervalBetweenAttempts: 100,
+      });
+
+      const assetTypes = process.env.HOLAPLEX_WALLET_ASSET_TYPES?.split(
+        ","
+      ) as AssetType[];
+
+      await Promise.all(
+        assetTypes?.map((assetType) => {
+          return holaplex.mutate<
+            CreateCustomerWalletData,
+            CreateCustomerWalletVars
+          >({
+            mutation: CreateCustomerWallet,
+            variables: {
+              input: {
+                customer: me.holaplexCustomerId,
+                assetType,
+              },
+            },
+          });
+        })
+      );
+    },
+  },
+};
+
+export default NextAuth(authOptions);

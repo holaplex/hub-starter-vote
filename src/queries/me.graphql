@@ -1,0 +1,11 @@
+query GetMe {
+  me {
+    name
+    email
+    image
+    wallets {
+      address
+      assetId
+    }
+  }
+}

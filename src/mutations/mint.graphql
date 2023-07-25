@@ -1,0 +1,12 @@
+mutation MintDrop {
+  mint {
+    address
+  }
+}
+
+mutation TransferMint($id: String!, $wallet: String!) {
+  transferMint(id: $id, wallet: $wallet) {
+    address
+    owner
+  }
+}

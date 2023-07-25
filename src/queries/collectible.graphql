@@ -1,0 +1,11 @@
+query GetCollectibleHistory {
+  collectible {
+    mintHistory {
+      id
+      mintId
+      dropId
+      wallet
+      status
+    }
+  }
+}

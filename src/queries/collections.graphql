@@ -1,0 +1,18 @@
+query GetCollections {
+  collections {
+    id
+    collectionId
+    createdAt
+    creationStatus
+    collection {
+      id
+      blockchain
+    }
+    metadataJson {
+      id
+      image
+      name
+      description
+    }
+  }
+}

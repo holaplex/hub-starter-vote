@@ -1,0 +1,69 @@
+query GetCustomerWallets($project: UUID!, $customer: UUID!) {
+  project(id: $project) {
+    id
+    customer(id: $customer) {
+      id
+      treasury {
+        id
+        wallets {
+          address
+          assetId
+        }
+      }
+    }
+  }
+}
+
+query GetCustomerTreasury($project: UUID!, $customer: UUID!) {
+  project(id: $project) {
+    id
+    customer(id: $customer) {
+      id
+      treasury {
+        id
+      }
+    }
+  }
+}
+
+query GetCustomerCollections($project: UUID!, $customer: UUID!) {
+  project(id: $project) {
+    id
+    customer(id: $customer) {
+      id
+      mints {
+        id
+        collectionId
+        createdAt
+        creationStatus
+        collection {
+          id
+          blockchain
+        }
+        metadataJson {
+          id
+          image
+          name
+          description
+        }
+      }
+    }
+  }
+}
+
+query GetCustomerWallet(
+  $project: UUID!
+  $customer: UUID!
+  $assetId: AssetType
+) {
+  project(id: $project) {
+    id
+    customer(id: $customer) {
+      id
+      wallet(assetId: $assetId) {
+        address
+        assetId
+      }
+    }
+  }
+}
