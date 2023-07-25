@@ -14,7 +14,8 @@ import {
   TransferAssetInput,
   Blockchain,
   AssetType,
-  Collectible
+  Collectible,
+  Collection
 } from '@/graphql.types';
 import { Session } from 'next-auth';
 import { MintNft } from '@/mutations/drop.graphql';
@@ -24,7 +25,8 @@ import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
 import {
   GetProjectDrop,
-  GetProjectDropPurchases
+  GetProjectDropPurchases,
+  GetProjectCollections
 } from '@/queries/project.graphql';
 import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import UserSource from '@/modules/user';
@@ -45,6 +47,14 @@ export interface AppContext {
   };
 }
 
+interface GetProjectCollectionsVars {
+  project: string;
+}
+
+interface GetProjectCollectionsData {
+  project: Pick<Project, 'collections'>;
+}
+
 interface GetDropVars {
   project: string;
   drop: string;
@@ -52,11 +62,6 @@ interface GetDropVars {
 
 interface GetDropData {
   project: Pick<Project, 'drop'>;
-}
-
-interface GetDropVars {
-  project: string;
-  drop: string;
 }
 
 interface GetCustomerCollectionsData {
@@ -69,17 +74,19 @@ interface GetCustomerCollectionsVars {
 }
 
 export const queryResolvers: QueryResolvers<AppContext> = {
-  async drop(_a, _b, { dataSources: { holaplex } }) {
-    const { data } = await holaplex.query<GetDropData, GetDropVars>({
+  async collectibles(_a, _b, { dataSources: { holaplex } }) {
+    const { data } = await holaplex.query<
+      GetProjectCollectionsData,
+      GetProjectCollectionsVars
+    >({
       fetchPolicy: 'network-only',
-      query: GetProjectDrop,
+      query: GetProjectCollections,
       variables: {
-        project: process.env.HOLAPLEX_PROJECT_ID as string,
-        drop: process.env.HOLAPLEX_DROP_ID as string
+        project: process.env.HOLAPLEX_PROJECT_ID as string
       }
     });
 
-    return data.project.drop as Drop;
+    return data.project.collections as [Collection];
   },
   async collectible(_a, _b, { dataSources: { holaplex } }) {
     const { data } = await holaplex.query<GetDropData, GetDropVars>({

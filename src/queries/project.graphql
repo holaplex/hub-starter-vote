@@ -1,3 +1,21 @@
+query GetProjectCollections($project: UUID!) {
+  project(id: $project) {
+    id
+    collections {
+      id
+      address
+      blockchain
+      creationStatus
+      metadataJson {
+        id
+        image
+        name
+        description
+      }
+    }
+  }
+}
+
 query GetProjectDrop($project: UUID!, $drop: UUID!) {
   project(id: $project) {
     id

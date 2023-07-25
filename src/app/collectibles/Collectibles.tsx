@@ -43,7 +43,7 @@ export default function Collectibles() {
                     className='flex gap-2 items-center'
                   >
                     <div className='flex items-center'>
-                      <CryptoIcon assetType={wallet?.assetId as AssetType} />
+                      <CryptoIcon type={wallet?.assetId as AssetType} />
                       <span className='text-xs'>
                         {shorten(wallet?.address as string)}
                       </span>

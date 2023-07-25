@@ -17,7 +17,6 @@ declare module '*/drop.graphql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;
   export const MintNft: DocumentNode;
-export const GetDrop: DocumentNode;
 
   export default defaultDocument;
 }
@@ -45,7 +44,8 @@ declare module '*/transfer.graphql' {
 declare module '*/collectible.graphql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;
-  export const GetCollectibleHistory: DocumentNode;
+  export const GetCollectibles: DocumentNode;
+export const GetCollectibleHistory: DocumentNode;
 
   export default defaultDocument;
 }
@@ -72,7 +72,8 @@ declare module '*/me.graphql' {
 declare module '*/project.graphql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;
-  export const GetProjectDrop: DocumentNode;
+  export const GetProjectCollections: DocumentNode;
+export const GetProjectDrop: DocumentNode;
 export const GetProjectDropPurchases: DocumentNode;
 
   export default defaultDocument;

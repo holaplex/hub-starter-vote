@@ -1,3 +1,18 @@
+query GetCollectibles {
+  collectibles {
+    id
+    address
+    blockchain
+    creationStatus
+    metadataJson {
+      id
+      image
+      name
+      description
+    }
+  }
+}
+
 query GetCollectibleHistory {
   collectible {
     mintHistory {

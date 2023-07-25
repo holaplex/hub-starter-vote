@@ -1416,6 +1416,7 @@ type Purchase {
 
 type Query {
   collectible: Collectible
+  collectibles: [Collection]
   collections: [CollectionMint]
 
   """
@@ -1425,7 +1426,6 @@ type Query {
   This function fails if it fails to get `CreditsClient` or if blockchain enum conversion fails.
   """
   creditSheet: [ActionCost!]!
-  drop: Drop
 
   """
   Returns a list of event types that an external service can subscribe to.

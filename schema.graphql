@@ -2,6 +2,7 @@
 #import CollectionMint from 'holaplex.graphql'
 #import Purchase from 'holaplex.graphql'
 #import Drop from 'holaplex.graphql'
+#import Collection from 'holaplex.graphql'
 
 schema {
   query: Query
@@ -20,7 +21,7 @@ type Collectible {
 }
 
 type Query {
-  drop: Drop
+  collectibles: [Collection]
   me: Me
   collections: [CollectionMint]
   collectible: Collectible
