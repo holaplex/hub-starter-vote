@@ -14,7 +14,6 @@ import {
   TransferAssetInput,
   Blockchain,
   AssetType,
-  Collectible,
   Collection
 } from '@/graphql.types';
 import { Session } from 'next-auth';
@@ -26,7 +25,8 @@ import { getServerSession } from 'next-auth/next';
 import {
   GetProjectDrop,
   GetProjectDropPurchases,
-  GetProjectCollections
+  GetProjectCollections,
+  GetProjectDrops
 } from '@/queries/project.graphql';
 import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import UserSource from '@/modules/user';
@@ -45,6 +45,14 @@ export interface AppContext {
     holaplex: ApolloClient<NormalizedCacheObject>;
     user: UserSource;
   };
+}
+
+interface GetProjectDropsVars {
+  project: string;
+}
+
+interface GetProjectDropsData {
+  project: Pick<Project, 'drops'>;
 }
 
 interface GetProjectCollectionsVars {
@@ -74,6 +82,20 @@ interface GetCustomerCollectionsVars {
 }
 
 export const queryResolvers: QueryResolvers<AppContext> = {
+  async drops(_a, _b, { dataSources: { holaplex } }) {
+    const { data } = await holaplex.query<
+      GetProjectDropsData,
+      GetProjectDropsVars
+    >({
+      fetchPolicy: 'network-only',
+      query: GetProjectDrops,
+      variables: {
+        project: process.env.HOLAPLEX_PROJECT_ID as string
+      }
+    });
+
+    return data.project.drops as [Drop];
+  },
   async collectibles(_a, _b, { dataSources: { holaplex } }) {
     const { data } = await holaplex.query<
       GetProjectCollectionsData,
@@ -88,19 +110,19 @@ export const queryResolvers: QueryResolvers<AppContext> = {
 
     return data.project.collections as [Collection];
   },
-  async collectible(_a, _b, { dataSources: { holaplex } }) {
-    const { data } = await holaplex.query<GetDropData, GetDropVars>({
-      fetchPolicy: 'network-only',
-      query: GetProjectDropPurchases,
-      variables: {
-        project: process.env.HOLAPLEX_PROJECT_ID as string,
-        drop: process.env.HOLAPLEX_DROP_ID as string
-      }
-    });
+  // async collectible(_a, _b, { dataSources: { holaplex } }) {
+  //   const { data } = await holaplex.query<GetDropData, GetDropVars>({
+  //     fetchPolicy: 'network-only',
+  //     query: GetProjectDropPurchases,
+  //     variables: {
+  //       project: process.env.HOLAPLEX_PROJECT_ID as string,
+  //       drop: process.env.HOLAPLEX_DROP_ID as string
+  //     }
+  //   });
 
-    return { mintHistory: data.project.drop?.purchases } as Collectible;
-  },
-  async collections(_a, _b, { session, dataSources: { holaplex, db } }) {
+  //   return { mintHistory: data.project.drop?.purchases } as Collectible;
+  // },
+  async userCollectibles(_a, _b, { session, dataSources: { holaplex, db } }) {
     if (!session) {
       return null;
     }
@@ -167,7 +189,7 @@ interface GetCustomerWalletVars {
 }
 
 const mutationResolvers: MutationResolvers<AppContext> = {
-  async mint(_a, _b, { session, dataSources: { db, holaplex } }) {
+  async mint(_a, b, { session, dataSources: { db, holaplex } }) {
     if (!session) {
       return null;
     }
@@ -185,7 +207,7 @@ const mutationResolvers: MutationResolvers<AppContext> = {
       query: GetProjectDrop,
       variables: {
         project: process.env.HOLAPLEX_PROJECT_ID as string,
-        drop: process.env.HOLAPLEX_DROP_ID as string
+        drop: b.drop as string
       }
     });
 
@@ -224,7 +246,7 @@ const mutationResolvers: MutationResolvers<AppContext> = {
       mutation: MintNft,
       variables: {
         input: {
-          drop: process.env.HOLAPLEX_DROP_ID as string,
+          drop: b.drop as string,
           recipient: recipient as string
         }
       }

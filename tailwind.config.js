@@ -7,7 +7,7 @@ module.exports = {
         cta: '#F3F36D',
         backdrop: '#1A1A1D',
         contrast: ' #212122',
-        neautraltext: '#BDBDBD',
+        neautraltext: '#8B8B8E',
         subtletext: '#AAAAAA',
         cellsubtle: '#2B2B2B',
         success: '#628E36',

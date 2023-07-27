@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { Icon } from '../../../../components/Icon';
-import { GetCollections } from '@/queries/collections.graphql';
+import { GetUserCollectibles } from '@/queries/collectible.graphql';
 
 interface TransferMintData {
   transferAsset: TransferAssetPayload;
@@ -24,16 +24,17 @@ interface TransferForm {
   wallet: string;
 }
 
-interface GetCollectionsData {
-  collections: [CollectionMint];
+interface GetUserCollectiblesData {
+  userCollectibles: [CollectionMint];
 }
 
 export default function Transfer({ collectible }: { collectible: string }) {
   const router = useRouter();
   const [nftSent, setNftSent] = useState<boolean>(false);
 
-  const collectionsQuery = useQuery<GetCollectionsData>(GetCollections);
-  const blockchain = collectionsQuery.data?.collections.filter(
+  const collectionsQuery =
+    useQuery<GetUserCollectiblesData>(GetUserCollectibles);
+  const blockchain = collectionsQuery.data?.userCollectibles.filter(
     (mint) => mint.id === collectible
   )[0].collection?.blockchain;
 

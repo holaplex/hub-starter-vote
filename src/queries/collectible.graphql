@@ -1,26 +1,37 @@
-query GetCollectibles {
-  collectibles {
+query GetDrops {
+  drops {
     id
-    address
-    blockchain
+    collection {
+      id
+      address
+      blockchain
+      creationStatus
+      totalMints
+      metadataJson {
+        id
+        image
+        name
+        description
+      }
+    }
+  }
+}
+
+query GetUserCollectibles {
+  userCollectibles {
+    id
+    collectionId
+    createdAt
     creationStatus
+    collection {
+      id
+      blockchain
+    }
     metadataJson {
       id
       image
       name
       description
-    }
-  }
-}
-
-query GetCollectibleHistory {
-  collectible {
-    mintHistory {
-      id
-      mintId
-      dropId
-      wallet
-      status
     }
   }
 }

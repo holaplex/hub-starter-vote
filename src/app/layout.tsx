@@ -15,9 +15,11 @@ const inter = Inter({ subsets: ['latin'] });
 const userSource = new UserSource(holaplex, db);
 
 export default async function Layout({
-  children
+  children,
+  modal
 }: {
   children: React.ReactNode;
+  modal: React.ReactNode;
 }) {
   const session = await getServerSession(authOptions);
 
@@ -32,7 +34,10 @@ export default async function Layout({
           'bg-backdrop text-white container m-auto flex flex-col flex-grow min-h-screen max-w-5xl items-center px-4 lg:px-0'
         )}
       >
-        <App me={me}>{children}</App>
+        <App me={me}>
+          {children}
+          {modal}
+        </App>
       </body>
     </html>
   );
