@@ -1,27 +1,21 @@
 'use client';
 import Image from 'next/image';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  AssetType,
-  CollectionMint,
-  Drop,
-  MintHistories
-} from '@/graphql.types';
-import { shorten } from '../modules/wallet';
+import { useEffect, useRef, useState } from 'react';
+import { CollectionMint, Drop, Vote } from '@/graphql.types';
 import { MintDrop } from '@/mutations/mint.graphql';
 import { ApolloError, useMutation, useQuery } from '@apollo/client';
-import { GetDrops } from '@/queries/collectible.graphql';
 import Link from 'next/link';
-import { isNil, not, pipe } from 'ramda';
 import useMe from '@/hooks/useMe';
 import { Session } from 'next-auth';
 import { toast } from 'react-toastify';
 import { PopoverBox } from '../components/Popover';
 import { Icon } from '../components/Icon';
 import { signOut } from 'next-auth/react';
-import Copy from '../components/Copy';
 import CryptoIcon from '../components/CryptoIcon';
-import { GetUserCollectibles } from '@/queries/collectible.graphql';
+import {
+  GetUserCollectibles,
+  GetCollectible
+} from '@/queries/collectible.graphql';
 import { useRouter } from 'next/navigation';
 import { Modal } from '../components/Modal';
 
@@ -30,7 +24,15 @@ interface MintData {
 }
 
 interface MintVars {
-  drop: String;
+  vote: Vote;
+}
+
+interface GetCollectibleData {
+  collectible: Drop;
+}
+
+interface GetCollectibleVars {
+  vote: Vote;
 }
 
 interface GetUserCollectiblesData {
@@ -45,43 +47,54 @@ export default function Home({ session }: HomeProps) {
   const me = useMe();
   const router = useRouter();
   const urlRef = useRef<string>('');
-
   const [shareTweet, setShareTweet] = useState<boolean>(false);
 
-  const collectiblesQuery = useQuery(GetDrops);
-  const drops = collectiblesQuery.data?.drops as [Drop];
+  const collectibleAQuery = useQuery<GetCollectibleData, GetCollectibleVars>(
+    GetCollectible,
+    {
+      variables: {
+        vote: Vote.A
+      }
+    }
+  );
+  const collectibleA = collectibleAQuery.data?.collectible;
 
-  const walletAddresses = me?.wallets?.map((wallet) => wallet?.address);
+  const collectibleBQuery = useQuery<GetCollectibleData, GetCollectibleVars>(
+    GetCollectible,
+    {
+      variables: {
+        vote: Vote.B
+      }
+    }
+  );
+  const collectibleB = collectibleBQuery.data?.collectible;
 
-  const collectionsQuery =
+  const userCollectiblesQuery =
     useQuery<GetUserCollectiblesData>(GetUserCollectibles);
 
-  const userVote = collectionsQuery.data?.userCollectibles?.filter(
+  const userVote = userCollectiblesQuery.data?.userCollectibles?.filter(
     (mint) =>
-      mint.collectionId === drops?.at(0)?.collection.id ||
-      mint.collectionId === drops?.at(1)?.collection.id
+      mint.collectionId === collectibleA?.collection.id ||
+      mint.collectionId === collectibleB?.collection.id
   );
 
   const [mint, { loading }] = useMutation<MintData, MintVars>(MintDrop, {
     awaitRefetchQueries: true,
     refetchQueries: [
       {
-        query: GetDrops
-      },
-      {
         query: GetUserCollectibles
       }
     ]
   });
 
-  const onMint = (drop: String) => {
+  const onMint = (vote: Vote) => {
     if (!session) {
       router.push('/login');
       return;
     }
     mint({
       variables: {
-        drop
+        vote
       },
       onCompleted: (data: MintData) => {
         toast.success('Mint successful');
@@ -95,7 +108,10 @@ export default function Home({ session }: HomeProps) {
     });
   };
 
-  const loadingQueries = collectiblesQuery.loading || collectionsQuery.loading;
+  const loadingQueries =
+    collectibleAQuery.loading ||
+    collectibleBQuery.loading ||
+    userCollectiblesQuery.loading;
 
   useEffect(() => {
     urlRef.current = window.location.href;
@@ -124,41 +140,13 @@ export default function Home({ session }: HomeProps) {
               </button>
             }
           >
-            <div className='rounded-lg bg-contrast p-6 flex flex-col items-center mt-4'>
-              <Link
-                href='/collectibles'
-                className='text-sm text-white underline'
-              >
+            <div className='rounded-lg bg-contrast p-6 flex flex-col gap-4 mt-4 items-start'>
+              <Link href='/collectibles' className='text-white font-medium'>
                 View collectibles
               </Link>
-              <span className='text-sm text-neautraltext mt-4'>Wallets</span>
-
-              <div className='flex flex-col gap-2 mt-2 items-center'>
-                {me?.wallets?.map((wallet) => {
-                  return (
-                    <div
-                      key={wallet?.address}
-                      className='flex gap-2 items-center'
-                    >
-                      <div className='flex items-center gap-1'>
-                        <CryptoIcon
-                          type={wallet?.assetId as AssetType}
-                          stroke='white'
-                          width={12}
-                          height={12}
-                        />
-                        <span className='text-xs'>
-                          {shorten(wallet?.address as string)}
-                        </span>
-                      </div>
-                      <Copy copyString={wallet?.address as string} />
-                    </div>
-                  );
-                })}
-              </div>
               <button
                 onClick={() => signOut()}
-                className='text-cta font-medium md:font-bold md:border-2 md:rounded-full md:border-cta md:py-3 md:px-6 mt-6'
+                className='text-white font-medium hover:cursor-pointer'
               >
                 Logout
               </button>
@@ -200,14 +188,14 @@ export default function Home({ session }: HomeProps) {
 
             <div className='flex gap-8 items-center mt-6'>
               <div>
-                <div className='bg-cta max-w-fit py-2 px-2 font-extrabold text-xl text-backdrop flex gap-2 items-center -rotate-12 -translate-x-4 translate-y-10'>
-                  TEAM <CryptoIcon type={drops.at(0)!.collection.blockchain} />
-                  {drops.at(0)!.collection.blockchain}
+                <div className='relative bg-cta max-w-fit py-2 px-2 font-extrabold text-xl text-backdrop flex gap-2 items-center -rotate-12 -translate-x-4 translate-y-10'>
+                  TEAM <CryptoIcon type={collectibleA!.collection.blockchain} />
+                  {collectibleA!.collection.blockchain}
                 </div>
                 <div className='max-w-[292px] max-h-[292px]'>
                   <img
-                    src={drops.at(0)!.collection.metadataJson?.image as string}
-                    alt={drops.at(0)!.collection.metadataJson?.name as string}
+                    src={collectibleA!.collection.metadataJson?.image as string}
+                    alt={collectibleA!.collection.metadataJson?.name as string}
                     className='w-full object-cover aspect-square rounded-lg'
                   />
                 </div>
@@ -215,15 +203,21 @@ export default function Home({ session }: HomeProps) {
 
               <span className='text-white text-2xl font-extrabold'>VS</span>
               <div>
-                <div className='bg-cta max-w-fit py-2 px-2 font-extrabold text-xl text-backdrop flex gap-2 items-center justify-end rotate-12 translate-x-4 translate-y-10'>
-                  TEAM <CryptoIcon type={drops.at(1)!.collection.blockchain} />
-                  {drops.at(0)!.collection.blockchain}
+                <div className='w-full flex justify-end'>
+                  <div
+                    className='bg-cta max-w-fit py-2 px-2 font-extrabold text-xl text-backdrop 
+                flex gap-2 items-center justify-end rotate-12 translate-x-4 translate-y-10'
+                  >
+                    TEAM
+                    <CryptoIcon type={collectibleB!.collection.blockchain} />
+                    {collectibleB!.collection.blockchain}
+                  </div>
                 </div>
 
                 <div className='max-w-[292px] max-h-[292px]'>
                   <img
-                    src={drops.at(1)!.collection.metadataJson?.image as string}
-                    alt={drops.at(1)!.collection.metadataJson?.name as string}
+                    src={collectibleB!.collection.metadataJson?.image as string}
+                    alt={collectibleB!.collection.metadataJson?.name as string}
                     className='w-full object-cover aspect-square rounded-lg'
                   />
                 </div>
@@ -241,10 +235,10 @@ export default function Home({ session }: HomeProps) {
                   bg-gradient-to-r from-[#71EA9F] via-[#8AA7CC] to-[#A16AF6]'
                   >
                     <span className='text-backdrop font-bold'>
-                      {drops.at(0)!.collection.blockchain} votes
+                      {collectibleA!.collection.blockchain} votes
                     </span>
                     <span className='text-backdrop text-3xl font-bold'>
-                      {drops.at(0)!.collection.totalMints}
+                      {collectibleA!.collection.totalMints}
                     </span>
                   </div>
                   <div
@@ -252,10 +246,10 @@ export default function Home({ session }: HomeProps) {
                   bg-gradient-to-r from-[#8A46FF] to-[#6E38CC]'
                   >
                     <span className='text-backdrop font-bold'>
-                      {drops.at(1)!.collection.blockchain} votes
+                      {collectibleB!.collection.blockchain} votes
                     </span>
                     <span className='text-backdrop text-3xl font-bold'>
-                      {drops.at(1)!.collection.totalMints}
+                      {collectibleB!.collection.totalMints}
                     </span>
                   </div>
                 </div>
@@ -265,28 +259,31 @@ export default function Home({ session }: HomeProps) {
                 <span className='text-white text-2xl font-semibold mt-12'>
                   Mint your raffle ticket to make your vote
                 </span>
-                <span className='text-cta text-xs font-medium mt-2'>
+                <Link
+                  href='/rules'
+                  className='text-cta text-xs font-medium mt-2'
+                >
                   View official rules
-                </span>
+                </Link>
 
                 <div className='flex gap-6 mt-6'>
                   <button
                     className='font-bold rounded-full text-contrast py-3 px-6 transition hover:opacity-80 flex gap-2 items-center
                 bg-gradient-to-r from-[#71EA9F] via-[#8AA7CC] to-[#A16AF6]'
-                    onClick={() => onMint(drops.at(0)!.id)}
+                    onClick={() => onMint(Vote.A)}
                     disabled={loading}
                   >
-                    <CryptoIcon type={drops.at(0)!.collection.blockchain} />
-                    {`Mint ticket on ${drops.at(0)!.collection.blockchain}`}
+                    <CryptoIcon type={collectibleA!.collection.blockchain} />
+                    {`Mint ticket on ${collectibleA!.collection.blockchain}`}
                   </button>
                   <button
                     className='font-bold rounded-full text-contrast py-3 px-6 transition hover:opacity-80 flex gap-2 items-center 
                 bg-gradient-to-r from-[#8A46FF] to-[#6E38CC]'
-                    onClick={() => onMint(drops.at(1)!.id)}
+                    onClick={() => onMint(Vote.B)}
                     disabled={loading}
                   >
-                    <CryptoIcon type={drops.at(1)!.collection.blockchain} />
-                    {`Mint ticket on ${drops.at(1)!.collection.blockchain}`}
+                    <CryptoIcon type={collectibleB!.collection.blockchain} />
+                    {`Mint ticket on ${collectibleB!.collection.blockchain}`}
                   </button>
                 </div>
               </>
@@ -308,7 +305,7 @@ export default function Home({ session }: HomeProps) {
             Let the world know how you voted.
           </span>
           <Link
-            href={`https://twitter.com/intent/tweet?text=Voted for ${
+            href={`https://twitter.com/intent/tweet?text=I Voted for ${
               userVote && userVote[0]?.collection?.blockchain
             } in the ongoing blockchain battle by @holaplex at ${
               urlRef.current

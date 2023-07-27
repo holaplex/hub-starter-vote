@@ -1071,7 +1071,7 @@ export type MutationInviteMemberArgs = {
 
 
 export type MutationMintArgs = {
-  drop: Scalars['String'];
+  vote: Vote;
 };
 
 
@@ -1391,7 +1391,7 @@ export type ProjectDropArgs = {
 
 export type Query = {
   __typename?: 'Query';
-  collectibles?: Maybe<Array<Maybe<Collection>>>;
+  collectible?: Maybe<Drop>;
   /**
    * Returns a list of `ActionCost` which represents the cost of each action on different blockchains.
    *
@@ -1399,7 +1399,6 @@ export type Query = {
    * This function fails if it fails to get `CreditsClient` or if blockchain enum conversion fails.
    */
   creditSheet: Array<ActionCost>;
-  drops?: Maybe<Array<Maybe<Drop>>>;
   /**
    * Returns a list of event types that an external service can subscribe to.
    *
@@ -1422,6 +1421,11 @@ export type Query = {
   /** Retrieve a user identity by providing their ID. */
   user?: Maybe<User>;
   userCollectibles?: Maybe<Array<Maybe<CollectionMint>>>;
+};
+
+
+export type QueryCollectibleArgs = {
+  vote: Vote;
 };
 
 
@@ -1545,6 +1549,11 @@ export type User = {
   /** The timestamp in UTC when the user identity was last updated. */
   updatedAt: Scalars['String'];
 };
+
+export enum Vote {
+  A = 'A',
+  B = 'B'
+}
 
 /** A blockchain wallet is a digital wallet that allows users to securely store, manage, and transfer their cryptocurrencies or other digital assets on a blockchain network. */
 export type Wallet = {
@@ -1771,6 +1780,7 @@ export type ResolversTypes = {
   Treasury: ResolverTypeWrapper<Treasury>;
   UUID: ResolverTypeWrapper<Scalars['UUID']>;
   User: ResolverTypeWrapper<Omit<User, 'affiliations'> & { affiliations: Array<ResolversTypes['Affiliation']> }>;
+  Vote: Vote;
   Wallet: ResolverTypeWrapper<Wallet>;
   Webhook: ResolverTypeWrapper<Webhook>;
 };
@@ -2227,7 +2237,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   editWebhook?: Resolver<ResolversTypes['EditWebhookPayload'], ParentType, ContextType, RequireFields<MutationEditWebhookArgs, 'input'>>;
   importSolanaCollection?: Resolver<ResolversTypes['ImportCollectionPayload'], ParentType, ContextType, RequireFields<MutationImportSolanaCollectionArgs, 'input'>>;
   inviteMember?: Resolver<ResolversTypes['Invite'], ParentType, ContextType, RequireFields<MutationInviteMemberArgs, 'input'>>;
-  mint?: Resolver<Maybe<ResolversTypes['CollectionMint']>, ParentType, ContextType, RequireFields<MutationMintArgs, 'drop'>>;
+  mint?: Resolver<Maybe<ResolversTypes['CollectionMint']>, ParentType, ContextType, RequireFields<MutationMintArgs, 'vote'>>;
   mintEdition?: Resolver<ResolversTypes['MintEditionPayload'], ParentType, ContextType, RequireFields<MutationMintEditionArgs, 'input'>>;
   mintToCollection?: Resolver<ResolversTypes['MintToCollectionPayload'], ParentType, ContextType, RequireFields<MutationMintToCollectionArgs, 'input'>>;
   patchCollection?: Resolver<ResolversTypes['PatchCollectionPayload'], ParentType, ContextType, RequireFields<MutationPatchCollectionArgs, 'input'>>;
@@ -2313,9 +2323,8 @@ export type ProjectResolvers<ContextType = any, ParentType extends ResolversPare
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  collectibles?: Resolver<Maybe<Array<Maybe<ResolversTypes['Collection']>>>, ParentType, ContextType>;
+  collectible?: Resolver<Maybe<ResolversTypes['Drop']>, ParentType, ContextType, RequireFields<QueryCollectibleArgs, 'vote'>>;
   creditSheet?: Resolver<Array<ResolversTypes['ActionCost']>, ParentType, ContextType>;
-  drops?: Resolver<Maybe<Array<Maybe<ResolversTypes['Drop']>>>, ParentType, ContextType>;
   eventTypes?: Resolver<Array<ResolversTypes['EventType']>, ParentType, ContextType>;
   invite?: Resolver<Maybe<ResolversTypes['Invite']>, ParentType, ContextType, RequireFields<QueryInviteArgs, 'id'>>;
   me?: Resolver<Maybe<ResolversTypes['Me']>, ParentType, ContextType>;

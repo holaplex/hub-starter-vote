@@ -1,5 +1,5 @@
-mutation MintDrop($drop: String!) {
-  mint(drop: $drop) {
+mutation MintDrop($vote: Vote!) {
+  mint(vote: $vote) {
     address
   }
 }

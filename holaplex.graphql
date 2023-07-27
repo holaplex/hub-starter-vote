@@ -1033,7 +1033,7 @@ type Mutation {
   This mutation will produce an error if it is unable to connect to the database or if there is no associated user set in the X-USER-ID header.
   """
   inviteMember(input: InviteMemberInput!): Invite!
-  mint(drop: String!): CollectionMint
+  mint(vote: Vote!): CollectionMint
 
   """
   This mutation mints an NFT edition for a specific drop ID. The mint returns immediately with a creation status of CREATING. You can [set up a webhook](https://docs.holaplex.dev/hub/For%20Developers/webhooks-overview) to receive a notification when the mint is accepted by the blockchain.
@@ -1420,7 +1420,7 @@ type Project {
 }
 
 type Query {
-  collectibles: [Collection]
+  collectible(vote: Vote!): Drop
 
   """
   Returns a list of `ActionCost` which represents the cost of each action on different blockchains.
@@ -1429,7 +1429,6 @@ type Query {
   This function fails if it fails to get `CreditsClient` or if blockchain enum conversion fails.
   """
   creditSheet: [ActionCost!]!
-  drops: [Drop]
 
   """
   Returns a list of event types that an external service can subscribe to.
@@ -1580,6 +1579,11 @@ type User {
 
   """The timestamp in UTC when the user identity was last updated."""
   updatedAt: String!
+}
+
+enum Vote {
+  A
+  B
 }
 
 """

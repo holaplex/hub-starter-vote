@@ -43,18 +43,12 @@ query GetProjectDrop($project: UUID!, $drop: UUID!) {
     id
     drop(id: $drop) {
       id
-      startTime
-      endTime
       collection {
-        blockchain
-        totalMints
-        supply
         id
         address
-        holders {
-          address
-          owns
-        }
+        blockchain
+        creationStatus
+        totalMints
         metadataJson {
           id
           image

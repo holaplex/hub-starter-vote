@@ -1,8 +1,6 @@
 #import Wallet from 'holaplex.graphql'
 #import CollectionMint from 'holaplex.graphql'
 #import Drop from 'holaplex.graphql'
-#import Collection from 'holaplex.graphql'
-#import MintHistories from 'holaplex.graphql'
 
 schema {
   query: Query
@@ -16,19 +14,18 @@ type Me {
   wallets: [Wallet]
 }
 
-# type Collectible {
-#   mintHistory: [MintHistories]
-# }
+enum Vote {
+  A
+  B
+}
 
 type Query {
-  drops: [Drop]
-  collectibles: [Collection]
-  me: Me
+  collectible(vote: Vote!): Drop
   userCollectibles: [CollectionMint]
-  # collectible: Collectible
+  me: Me
 }
 
 type Mutation {
-  mint(drop: String!): CollectionMint
+  mint(vote: Vote!): CollectionMint
   transferMint(id: String!, wallet: String!): CollectionMint
 }

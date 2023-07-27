@@ -1,5 +1,5 @@
-query GetDrops {
-  drops {
+query GetCollectible($vote: Vote!) {
+  collectible(vote: $vote) {
     id
     collection {
       id

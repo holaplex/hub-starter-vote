@@ -44,7 +44,7 @@ declare module '*/transfer.graphql' {
 declare module '*/collectible.graphql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;
-  export const GetDrops: DocumentNode;
+  export const GetCollectible: DocumentNode;
 export const GetUserCollectibles: DocumentNode;
 
   export default defaultDocument;
