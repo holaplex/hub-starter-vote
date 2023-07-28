@@ -154,7 +154,7 @@ export default function Home({ session }: HomeProps) {
           </PopoverBox>
         )}
       </header>
-      <main className='w-full h-full my-auto'>
+      <main className='w-full h-full my-auto pb-2'>
         {loadingQueries ? (
           <>
             <div className='flex flex-col items-center'>
@@ -178,15 +178,15 @@ export default function Home({ session }: HomeProps) {
           </>
         ) : (
           <div className='flex flex-col items-center'>
-            <span className='text-neautraltext'>
+            <span className='text-neautraltext text-sm md:text-base'>
               🎉 To celebrate & showcase HUB’s multi-chain support Holaplex
               presents…. 🎉
             </span>
-            <span className='text-white text-6xl font-extrabold mt-3'>
+            <span className='text-white text-4xl md:text-6xl font-semibold md:font-extrabold mt-3'>
               BLOCKCHAIN BATTLE!
             </span>
 
-            <div className='flex gap-8 items-center mt-6'>
+            <div className='flex gap-3 md:gap-8 items-center mt-6 justify-around'>
               <div>
                 <div
                   className='relative bg-cta max-w-fit font-extrabold text-xl text-backdrop flex gap-2 items-center 
@@ -212,7 +212,9 @@ export default function Home({ session }: HomeProps) {
                 </div>
               </div>
 
-              <span className='text-white text-2xl font-extrabold'>VS</span>
+              <span className='text-white text-lg md:text-2xl font-extrabold'>
+                VS
+              </span>
               <div>
                 <div className='w-full flex justify-end'>
                   <div
@@ -275,7 +277,7 @@ export default function Home({ session }: HomeProps) {
               </>
             ) : (
               <>
-                <span className='text-white text-2xl font-semibold mt-12'>
+                <span className='text-white text-lg md:text-2xl font-semibold mt-12'>
                   Mint your raffle ticket to make your vote
                 </span>
                 <Link
