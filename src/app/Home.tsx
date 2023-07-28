@@ -188,9 +188,20 @@ export default function Home({ session }: HomeProps) {
 
             <div className='flex gap-8 items-center mt-6'>
               <div>
-                <div className='relative bg-cta max-w-fit py-2 px-2 font-extrabold text-xl text-backdrop flex gap-2 items-center -rotate-12 -translate-x-4 translate-y-10'>
+                <div
+                  className='relative bg-cta max-w-fit font-extrabold text-xl text-backdrop flex gap-2 items-center 
+                -rotate-[17deg] -translate-x-12 translate-y-10'
+                >
+                  <div
+                    className='h-0 w-0 border-t-[20px] border-l-[20px] border-b-[20px] 
+                      border-solid border-t-transparent border-b-transparent border-l-backdrop mr-4 -ml-[1px]'
+                  />
                   TEAM <CryptoIcon type={collectibleA!.collection.blockchain} />
                   {collectibleA!.collection.blockchain}
+                  <div
+                    className='h-0 w-0 border-t-[20px] border-r-[20px] border-b-[20px] 
+                      border-solid border-t-transparent border-b-transparent border-r-backdrop ml-4 -mr-[1px]'
+                  />
                 </div>
                 <div className='max-w-[292px] max-h-[292px]'>
                   <img
@@ -205,12 +216,20 @@ export default function Home({ session }: HomeProps) {
               <div>
                 <div className='w-full flex justify-end'>
                   <div
-                    className='bg-cta max-w-fit py-2 px-2 font-extrabold text-xl text-backdrop 
-                flex gap-2 items-center justify-end rotate-12 translate-x-4 translate-y-10'
+                    className='bg-cta max-w-fit font-extrabold text-xl text-backdrop 
+                flex gap-2 items-center justify-end rotate-[17deg] translate-x-12 translate-y-10'
                   >
+                    <div
+                      className='h-0 w-0 border-t-[20px] border-l-[20px] border-b-[20px] 
+                      border-solid border-t-transparent border-b-transparent border-l-backdrop mr-4 -ml-[1px]'
+                    />
                     TEAM
                     <CryptoIcon type={collectibleB!.collection.blockchain} />
                     {collectibleB!.collection.blockchain}
+                    <div
+                      className='h-0 w-0 border-t-[20px] border-r-[20px] border-b-[20px] 
+                      border-solid border-t-transparent border-b-transparent border-r-backdrop ml-4 -mr-[1px]'
+                    />
                   </div>
                 </div>
 
