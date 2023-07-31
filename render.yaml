@@ -21,7 +21,7 @@ services:
       - key: NEXTAUTH_SECRET
         generateValue: true
       - key: HOLAPLEX_WALLET_ASSET_TYPES
-        value: SOL
+        value: SOL,MATIC
         sync: false
       - key: HOLAPLEX_API_ENDPOINT
         value: https://api.holaplex.com/graphql
@@ -29,6 +29,16 @@ services:
         fromDatabase:
           name: hub-starter-template
           property: connectionString
+      - key: HOLAPLEX_PROJECT_ID
+        sync: false
+      - key: HOLAPLEX_A_DROP_ID
+        sync: false
+      - key: HOLAPLEX_B_DROP_ID
+        sync: false
+      - key: NEXT_PUBLIC_HOLAPLEX_VOTE_A_IMAGE
+        sync: false
+      - key: NEXT_PUBLIC_HOLAPLEX_VOTE_B_IMAGE
+        sync: false
 
     autoDeploy: true
 

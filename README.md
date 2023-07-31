@@ -73,6 +73,17 @@ POSTGRES_PASSWORD=holaplex
 HOLAPLEX_API_ENDPOINT=https://api.holaplex.com/graphql
 # https://docs.holaplex.dev/api
 HOLAPLEX_AUTH_TOKEN=
+HOLAPLEX_PROJECT_ID=
+# Create wallets for desired blockchains (SOL,MATIC,ETH). Can add multiple blockchains separated by comma.
+HOLAPLEX_WALLET_ASSET_TYPES=
+# Drop Id for team A
+HOLAPLEX_A_DROP_ID=
+# Drop Id for team B
+HOLAPLEX_B_DROP_ID=
+# Custom image url for team A Nft
+NEXT_PUBLIC_HOLAPLEX_VOTE_A_IMAGE=
+# Custom image url for team B Nft
+NEXT_PUBLIC_HOLAPLEX_VOTE_B_IMAGE=
 ```
 
 ### Migrations
