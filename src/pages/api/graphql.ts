@@ -60,6 +60,11 @@ interface GetCustomerCollectionsVars {
   customer: string;
 }
 
+const DROP_ID_FROM_VOTE = {
+  [Vote.A]: process.env.HOLAPLEX_A_DROP_ID,
+  [Vote.B]: process.env.HOLAPLEX_B_DROP_ID
+};
+
 export const queryResolvers: QueryResolvers<AppContext> = {
   async collectible(_a, b, { dataSources: { holaplex } }) {
     const { data } = await holaplex.query<GetDropData, GetDropVars>({
@@ -67,10 +72,7 @@ export const queryResolvers: QueryResolvers<AppContext> = {
       query: GetProjectDrop,
       variables: {
         project: process.env.HOLAPLEX_PROJECT_ID as string,
-        drop:
-          b.vote === Vote.A
-            ? (process.env.HOLAPLEX_A_DROP_ID as string)
-            : (process.env.HOLAPLEX_B_DROP_ID as string)
+        drop: DROP_ID_FROM_VOTE[b.vote] as string
       }
     });
 
@@ -161,10 +163,7 @@ const mutationResolvers: MutationResolvers<AppContext> = {
       query: GetProjectDrop,
       variables: {
         project: process.env.HOLAPLEX_PROJECT_ID as string,
-        drop:
-          b.vote === Vote.A
-            ? (process.env.HOLAPLEX_A_DROP_ID as string)
-            : (process.env.HOLAPLEX_B_DROP_ID as string)
+        drop: DROP_ID_FROM_VOTE[b.vote] as string
       }
     });
 
@@ -203,10 +202,7 @@ const mutationResolvers: MutationResolvers<AppContext> = {
       mutation: MintNft,
       variables: {
         input: {
-          drop:
-            b.vote === Vote.A
-              ? (process.env.HOLAPLEX_A_DROP_ID as string)
-              : (process.env.HOLAPLEX_B_DROP_ID as string),
+          drop: DROP_ID_FROM_VOTE[b.vote] as string,
           recipient: recipient as string
         }
       }

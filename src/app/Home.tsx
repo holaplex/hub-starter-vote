@@ -17,7 +17,7 @@ import {
   GetCollectible
 } from '@/queries/collectible.graphql';
 import { useRouter } from 'next/navigation';
-import { Modal } from '../components/Modal';
+import { Modal } from '@holaplex/ui-library-react';
 
 interface MintData {
   mint: CollectionMint;
@@ -47,7 +47,7 @@ export default function Home({ session }: HomeProps) {
   const me = useMe();
   const router = useRouter();
   const urlRef = useRef<string>('');
-  const [shareTweet, setShareTweet] = useState<boolean>(false);
+  const [shareTweet, setShareTweet] = useState<boolean>(true);
 
   const collectibleAQuery = useQuery<GetCollectibleData, GetCollectibleVars>(
     GetCollectible,
@@ -205,7 +205,9 @@ export default function Home({ session }: HomeProps) {
                 </div>
                 <div className='max-w-[292px] max-h-[292px]'>
                   <img
-                    src={collectibleA!.collection.metadataJson?.image as string}
+                    src={
+                      process.env.NEXT_PUBLIC_HOLAPLEX_VOTE_A_IMAGE as string
+                    }
                     alt={collectibleA!.collection.metadataJson?.name as string}
                     className='w-full object-cover aspect-square rounded-lg'
                   />
@@ -237,7 +239,9 @@ export default function Home({ session }: HomeProps) {
 
                 <div className='max-w-[292px] max-h-[292px]'>
                   <img
-                    src={collectibleB!.collection.metadataJson?.image as string}
+                    src={
+                      process.env.NEXT_PUBLIC_HOLAPLEX_VOTE_B_IMAGE as string
+                    }
                     alt={collectibleB!.collection.metadataJson?.name as string}
                     className='w-full object-cover aspect-square rounded-lg'
                   />
