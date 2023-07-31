@@ -255,10 +255,7 @@ export default function Home({ session }: HomeProps) {
                   You chose {userVote[0].collection?.blockchain}!
                 </span>
                 <div className='flex gap-6 mt-6'>
-                  <div
-                    className='flex flex-col gap-2 items-center justify-center py-4 px-8 rounded-lg 
-                  bg-gradient-to-r from-[#71EA9F] via-[#8AA7CC] to-[#A16AF6]'
-                  >
+                  <div className='flex flex-col gap-2 items-center justify-center py-4 px-8 rounded-lg solana-gradient'>
                     <span className='text-backdrop font-bold'>
                       {collectibleA!.collection.blockchain} votes
                     </span>
@@ -268,7 +265,7 @@ export default function Home({ session }: HomeProps) {
                   </div>
                   <div
                     className='flex flex-col gap-2 items-center justify-center py-4 px-8 rounded-lg 
-                  bg-gradient-to-r from-[#8A46FF] to-[#6E38CC]'
+                  polygon-gradient'
                   >
                     <span className='text-backdrop font-bold'>
                       {collectibleB!.collection.blockchain} votes

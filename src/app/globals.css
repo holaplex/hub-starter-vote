@@ -13,3 +13,11 @@
 .modal-page {
   @apply backdrop-contrast-50;
 }
+
+.solana-gradient {
+  @apply bg-gradient-to-r from-[#71EA9F] via-[#8AA7CC] to-[#A16AF6];
+}
+
+.polygon-gradient {
+  @apply bg-gradient-to-r from-[#8A46FF] to-[#6E38CC];
+}
