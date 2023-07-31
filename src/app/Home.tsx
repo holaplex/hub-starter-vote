@@ -47,7 +47,7 @@ export default function Home({ session }: HomeProps) {
   const me = useMe();
   const router = useRouter();
   const urlRef = useRef<string>('');
-  const [shareTweet, setShareTweet] = useState<boolean>(true);
+  const [shareTweet, setShareTweet] = useState<boolean>(false);
 
   const collectibleAQuery = useQuery<GetCollectibleData, GetCollectibleVars>(
     GetCollectible,
