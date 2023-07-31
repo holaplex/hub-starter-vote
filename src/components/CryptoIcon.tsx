@@ -1,19 +1,57 @@
-import { AssetType } from '../graphql.types';
+import { AssetType, Blockchain } from '../graphql.types';
 import { Icon } from './Icon';
 
 interface CryptoIconProps {
-  assetType: AssetType;
+  type: AssetType | Blockchain;
   className?: string;
+  width?: number;
+  height?: number;
+  stroke?: string;
+  fill?: string;
 }
 
-export default function CryptoIcon({ assetType, className }: CryptoIconProps) {
+export default function CryptoIcon({
+  type: assetType,
+  className,
+  width,
+  height,
+  stroke,
+  fill
+}: CryptoIconProps) {
   switch (assetType) {
     case AssetType.Sol:
-      return <Icon.Solana className={className} />;
+    case Blockchain.Solana:
+      return (
+        <Icon.Solana
+          className={className}
+          width={width}
+          height={height}
+          fill={fill}
+          stroke={stroke}
+        />
+      );
     case AssetType.Matic:
-      return <Icon.Polygon className={className} />;
+    case Blockchain.Polygon:
+      return (
+        <Icon.Polygon
+          className={className}
+          width={width}
+          height={height}
+          fill={fill}
+          stroke={stroke}
+        />
+      );
     case AssetType.Eth:
-      return <Icon.Eth className={className} />;
+    case Blockchain.Ethereum:
+      return (
+        <Icon.Eth
+          className={className}
+          width={width}
+          height={height}
+          fill={fill}
+          stroke={stroke}
+        />
+      );
     default:
       return <></>;
   }

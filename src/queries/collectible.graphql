@@ -1,11 +1,37 @@
-query GetCollectibleHistory {
-  collectible {
-    mintHistory {
+query GetCollectible($vote: Vote!) {
+  collectible(vote: $vote) {
+    id
+    collection {
       id
-      mintId
-      dropId
-      wallet
-      status
+      address
+      blockchain
+      creationStatus
+      totalMints
+      metadataJson {
+        id
+        image
+        name
+        description
+      }
+    }
+  }
+}
+
+query GetUserCollectibles {
+  userCollectibles {
+    id
+    collectionId
+    createdAt
+    creationStatus
+    collection {
+      id
+      blockchain
+    }
+    metadataJson {
+      id
+      image
+      name
+      description
     }
   }
 }

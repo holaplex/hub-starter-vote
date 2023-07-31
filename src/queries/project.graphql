@@ -1,20 +1,54 @@
+query GetProjectDrops($project: UUID!) {
+  project(id: $project) {
+    id
+    drops {
+      id
+      collection {
+        id
+        address
+        blockchain
+        creationStatus
+        totalMints
+        metadataJson {
+          id
+          image
+          name
+          description
+        }
+      }
+    }
+  }
+}
+
+query GetProjectCollections($project: UUID!) {
+  project(id: $project) {
+    id
+    collections {
+      id
+      address
+      blockchain
+      creationStatus
+      metadataJson {
+        id
+        image
+        name
+        description
+      }
+    }
+  }
+}
+
 query GetProjectDrop($project: UUID!, $drop: UUID!) {
   project(id: $project) {
     id
     drop(id: $drop) {
       id
-      startTime
-      endTime
       collection {
-        blockchain
-        totalMints
-        supply
         id
         address
-        holders {
-          address
-          owns
-        }
+        blockchain
+        creationStatus
+        totalMints
         metadataJson {
           id
           image
@@ -35,12 +69,14 @@ query GetProjectDropPurchases($project: UUID!, $drop: UUID!) {
     id
     drop(id: $drop) {
       id
-      purchases {
+      collection {
         id
-        mintId
-        dropId
-        wallet
-        status
+        mintHistories {
+          id
+          mintId
+          wallet
+          status
+        }
       }
     }
   }

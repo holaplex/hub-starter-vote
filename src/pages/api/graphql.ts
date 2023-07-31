@@ -14,7 +14,7 @@ import {
   TransferAssetInput,
   Blockchain,
   AssetType,
-  Collectible
+  Vote
 } from '@/graphql.types';
 import { Session } from 'next-auth';
 import { MintNft } from '@/mutations/drop.graphql';
@@ -22,10 +22,7 @@ import { TransferAsset } from '@/mutations/transfer.graphql';
 
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
-import {
-  GetProjectDrop,
-  GetProjectDropPurchases
-} from '@/queries/project.graphql';
+import { GetProjectDrop } from '@/queries/project.graphql';
 import { authOptions } from '@/pages/api/auth/[...nextauth]';
 import UserSource from '@/modules/user';
 import holaplex from '@/modules/holaplex';
@@ -54,11 +51,6 @@ interface GetDropData {
   project: Pick<Project, 'drop'>;
 }
 
-interface GetDropVars {
-  project: string;
-  drop: string;
-}
-
 interface GetCustomerCollectionsData {
   project: Pick<Project, 'customer'>;
 }
@@ -68,32 +60,25 @@ interface GetCustomerCollectionsVars {
   customer: string;
 }
 
+const DROP_ID_FROM_VOTE = {
+  [Vote.A]: process.env.HOLAPLEX_A_DROP_ID,
+  [Vote.B]: process.env.HOLAPLEX_B_DROP_ID
+};
+
 export const queryResolvers: QueryResolvers<AppContext> = {
-  async drop(_a, _b, { dataSources: { holaplex } }) {
+  async collectible(_a, b, { dataSources: { holaplex } }) {
     const { data } = await holaplex.query<GetDropData, GetDropVars>({
       fetchPolicy: 'network-only',
       query: GetProjectDrop,
       variables: {
         project: process.env.HOLAPLEX_PROJECT_ID as string,
-        drop: process.env.HOLAPLEX_DROP_ID as string
+        drop: DROP_ID_FROM_VOTE[b.vote] as string
       }
     });
 
     return data.project.drop as Drop;
   },
-  async collectible(_a, _b, { dataSources: { holaplex } }) {
-    const { data } = await holaplex.query<GetDropData, GetDropVars>({
-      fetchPolicy: 'network-only',
-      query: GetProjectDropPurchases,
-      variables: {
-        project: process.env.HOLAPLEX_PROJECT_ID as string,
-        drop: process.env.HOLAPLEX_DROP_ID as string
-      }
-    });
-
-    return { mintHistory: data.project.drop?.purchases } as Collectible;
-  },
-  async collections(_a, _b, { session, dataSources: { holaplex, db } }) {
+  async userCollectibles(_a, _b, { session, dataSources: { holaplex, db } }) {
     if (!session) {
       return null;
     }
@@ -160,7 +145,7 @@ interface GetCustomerWalletVars {
 }
 
 const mutationResolvers: MutationResolvers<AppContext> = {
-  async mint(_a, _b, { session, dataSources: { db, holaplex } }) {
+  async mint(_a, b, { session, dataSources: { db, holaplex } }) {
     if (!session) {
       return null;
     }
@@ -178,7 +163,7 @@ const mutationResolvers: MutationResolvers<AppContext> = {
       query: GetProjectDrop,
       variables: {
         project: process.env.HOLAPLEX_PROJECT_ID as string,
-        drop: process.env.HOLAPLEX_DROP_ID as string
+        drop: DROP_ID_FROM_VOTE[b.vote] as string
       }
     });
 
@@ -217,7 +202,7 @@ const mutationResolvers: MutationResolvers<AppContext> = {
       mutation: MintNft,
       variables: {
         input: {
-          drop: process.env.HOLAPLEX_DROP_ID as string,
+          drop: DROP_ID_FROM_VOTE[b.vote] as string,
           recipient: recipient as string
         }
       }
