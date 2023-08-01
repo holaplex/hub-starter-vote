@@ -12,10 +12,6 @@ services:
         sync: false
       - key: HOLAPLEX_AUTH_TOKEN
         sync: false
-      - key: HOLAPLEX_PROJECT_ID
-        sync: false
-      - key: HOLAPLEX_DROP_ID
-        sync: false
       - key: NEXTAUTH_URL
         sync: false
       - key: NEXTAUTH_SECRET
