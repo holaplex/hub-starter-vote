@@ -22,7 +22,6 @@ services:
         generateValue: true
       - key: HOLAPLEX_WALLET_ASSET_TYPES
         value: SOL,MATIC
-        sync: false
       - key: HOLAPLEX_API_ENDPOINT
         value: https://api.holaplex.com/graphql
       - key: DATABASE_URL
