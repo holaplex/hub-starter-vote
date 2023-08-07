@@ -9,3 +9,41 @@ query GetMe {
     }
   }
 }
+
+query GetMeCollectiblesPage {
+  me {
+    collectibles {
+      id
+      collectionId
+      createdAt
+      creationStatus
+      collectionId
+      collection {
+        id
+        blockchain
+      }
+      metadataJson {
+        id
+        image
+        name
+        description
+      }
+    }
+  }
+}
+
+query GetMeHomePage {
+  me {
+    mintHistory {
+      id
+      mint {
+        id
+        collectionId
+        collection {
+          id
+          blockchain
+        }
+      }
+    }
+  }
+}

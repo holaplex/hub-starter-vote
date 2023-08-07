@@ -16,22 +16,3 @@ query GetCollectible($vote: Vote!) {
     }
   }
 }
-
-query GetUserCollectibles {
-  userCollectibles {
-    id
-    collectionId
-    createdAt
-    creationStatus
-    collection {
-      id
-      blockchain
-    }
-    metadataJson {
-      id
-      image
-      name
-      description
-    }
-  }
-}

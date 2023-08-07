@@ -1,8 +1,17 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import { CollectionMint, Drop, Vote } from "@/graphql.types";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  CollectionMint,
+  Drop,
+  Vote,
+  Wallet,
+  MintHistory,
+  Me,
+  Maybe,
+} from "@/graphql.types";
 import { MintDrop } from "@/mutations/mint.graphql";
+import { GetMeHomePage } from "@/queries/me.graphql";
 import { ApolloError, useMutation, useQuery } from "@apollo/client";
 import Link from "next/link";
 import useMe from "@/hooks/useMe";
@@ -11,11 +20,9 @@ import { toast } from "react-toastify";
 import { PopoverBox } from "../components/Popover";
 import { Icon } from "../components/Icon";
 import { signOut } from "next-auth/react";
+import { GetMe } from "@/queries/me.graphql";
 import CryptoIcon from "../components/CryptoIcon";
-import {
-  GetUserCollectibles,
-  GetCollectible,
-} from "@/queries/collectible.graphql";
+import { GetCollectible } from "@/queries/collectible.graphql";
 import { useRouter } from "next/navigation";
 import { Modal } from "@holaplex/ui-library-react";
 
@@ -35,8 +42,8 @@ interface GetCollectibleVars {
   vote: Vote;
 }
 
-interface GetUserCollectiblesData {
-  userCollectibles: [CollectionMint];
+interface GetMeHomePageData {
+  me: Maybe<Me>;
 }
 
 interface HomeProps {
@@ -48,6 +55,8 @@ export default function Home({ session }: HomeProps) {
   const router = useRouter();
   const urlRef = useRef<string>("");
   const [shareTweet, setShareTweet] = useState<boolean>(false);
+
+  const meQuery = useQuery<GetMeHomePageData>(GetMeHomePage);
 
   const collectibleAQuery = useQuery<GetCollectibleData, GetCollectibleVars>(
     GetCollectible,
@@ -69,20 +78,11 @@ export default function Home({ session }: HomeProps) {
   );
   const collectibleB = collectibleBQuery.data?.collectible;
 
-  const userCollectiblesQuery =
-    useQuery<GetUserCollectiblesData>(GetUserCollectibles);
-
-  const userVote = userCollectiblesQuery.data?.userCollectibles?.filter(
-    (mint) =>
-      mint.collectionId === collectibleA?.collection.id ||
-      mint.collectionId === collectibleB?.collection.id
-  );
-
   const [mint, { loading }] = useMutation<MintData, MintVars>(MintDrop, {
     awaitRefetchQueries: true,
     refetchQueries: [
       {
-        query: GetUserCollectibles,
+        query: GetMe,
       },
       {
         query: GetCollectible,
@@ -120,10 +120,18 @@ export default function Home({ session }: HomeProps) {
     });
   };
 
+  const userVote = useMemo(() => {
+    const mintHistory = meQuery.data?.me?.mintHistory || ([] as MintHistory[]);
+
+    return mintHistory.find(
+      (mintHistory) =>
+        mintHistory?.mint?.collectionId === collectibleA?.collection.id ||
+        mintHistory?.mint?.collectionId === collectibleB?.collection.id
+    );
+  }, [meQuery, collectibleA, collectibleB]);
+
   const loadingQueries =
-    collectibleAQuery.loading ||
-    collectibleBQuery.loading ||
-    userCollectiblesQuery.loading;
+    collectibleAQuery.loading || collectibleBQuery.loading || meQuery.loading;
 
   useEffect(() => {
     urlRef.current = window.location.href;
@@ -260,11 +268,10 @@ export default function Home({ session }: HomeProps) {
                 </div>
               </div>
             </div>
-
-            {userVote && userVote.length > 0 ? (
+            {userVote ? (
               <>
                 <span className="text-white text-2xl font-semibold mt-12">
-                  You chose {userVote[0].collection?.blockchain}!
+                  You chose {userVote?.mint?.collection?.blockchain}!
                 </span>
                 <div className="flex gap-6 mt-6">
                   <div className="flex flex-col gap-2 items-center justify-center py-4 px-8 rounded-lg solana-gradient">
@@ -340,7 +347,7 @@ export default function Home({ session }: HomeProps) {
           </span>
           <Link
             href={`https://twitter.com/intent/tweet?text=I Voted for ${
-              userVote && userVote[0]?.collection?.blockchain
+              userVote && userVote?.mint?.collection?.blockchain
             } in the ongoing blockchain battle by @holaplex at ${
               urlRef.current
             }`}

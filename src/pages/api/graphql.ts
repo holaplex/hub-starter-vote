@@ -1,7 +1,7 @@
-import { ApolloServer } from '@apollo/server';
-import { ApolloClient, NormalizedCacheObject } from '@apollo/client';
-import { startServerAndCreateNextHandler } from '@as-integrations/next';
-import db from '@/modules/db';
+import { ApolloServer } from "@apollo/server";
+import { ApolloClient, NormalizedCacheObject } from "@apollo/client";
+import { startServerAndCreateNextHandler } from "@as-integrations/next";
+import db from "@/modules/db";
 import {
   MintDropInput,
   MintEditionPayload,
@@ -14,24 +14,28 @@ import {
   TransferAssetInput,
   Blockchain,
   AssetType,
-  Vote
-} from '@/graphql.types';
-import { Session } from 'next-auth';
-import { MintNft } from '@/mutations/drop.graphql';
-import { TransferAsset } from '@/mutations/transfer.graphql';
+  Vote,
+  Me,
+  MeResolvers,
+  MintHistory,
+} from "@/graphql.types";
+import { Session } from "next-auth";
+import { MintNft } from "@/mutations/drop.graphql";
+import { TransferAsset } from "@/mutations/transfer.graphql";
 
-import { PrismaClient } from '@prisma/client';
-import { getServerSession } from 'next-auth/next';
-import { GetProjectDrop } from '@/queries/project.graphql';
-import { authOptions } from '@/pages/api/auth/[...nextauth]';
-import UserSource from '@/modules/user';
-import holaplex from '@/modules/holaplex';
-import { loadSchema } from '@graphql-tools/load';
-import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader';
+import { PrismaClient } from "@prisma/client";
+import { getServerSession } from "next-auth/next";
+import { GetProjectDrop } from "@/queries/project.graphql";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import UserSource from "@/modules/user";
+import holaplex from "@/modules/holaplex";
+import { loadSchema } from "@graphql-tools/load";
+import { GraphQLFileLoader } from "@graphql-tools/graphql-file-loader";
 import {
   GetCustomerCollections,
-  GetCustomerWallet
-} from '@/queries/customer.graphql';
+  GetCustomerWallet,
+  GetCustomerMintHistories,
+} from "@/queries/customer.graphql";
 
 export interface AppContext {
   session: Session | null;
@@ -48,11 +52,20 @@ interface GetDropVars {
 }
 
 interface GetDropData {
-  project: Pick<Project, 'drop'>;
+  project: Pick<Project, "drop">;
+}
+
+interface GetCustomerVars {
+  project: string;
+  customer: string;
+}
+
+interface GetCustomerMintHistoriesData {
+  project: Pick<Project, "customer">;
 }
 
 interface GetCustomerCollectionsData {
-  project: Pick<Project, 'customer'>;
+  project: Pick<Project, "customer">;
 }
 
 interface GetCustomerCollectionsVars {
@@ -62,47 +75,53 @@ interface GetCustomerCollectionsVars {
 
 const DROP_ID_FROM_VOTE = {
   [Vote.A]: process.env.HOLAPLEX_A_DROP_ID,
-  [Vote.B]: process.env.HOLAPLEX_B_DROP_ID
+  [Vote.B]: process.env.HOLAPLEX_B_DROP_ID,
 };
 
-export const queryResolvers: QueryResolvers<AppContext> = {
-  async collectible(_a, b, { dataSources: { holaplex } }) {
-    const { data } = await holaplex.query<GetDropData, GetDropVars>({
-      fetchPolicy: 'network-only',
-      query: GetProjectDrop,
-      variables: {
-        project: process.env.HOLAPLEX_PROJECT_ID as string,
-        drop: DROP_ID_FROM_VOTE[b.vote] as string
-      }
-    });
-
-    return data.project.drop as Drop;
-  },
-  async userCollectibles(_a, _b, { session, dataSources: { holaplex, db } }) {
-    if (!session) {
-      return null;
-    }
-    const user = await db.user.findFirst({
-      where: { email: session.user?.email }
-    });
-
-    if (!user || !user.holaplexCustomerId) {
-      return null;
-    }
-
+const meResolvers: MeResolvers<AppContext> = {
+  async collectibles(me: Me, _b, { dataSources: { holaplex } }) {
     const { data } = await holaplex.query<
       GetCustomerCollectionsData,
       GetCustomerCollectionsVars
     >({
-      fetchPolicy: 'network-only',
+      fetchPolicy: "network-only",
       query: GetCustomerCollections,
       variables: {
         project: process.env.HOLAPLEX_PROJECT_ID as string,
-        customer: user?.holaplexCustomerId
-      }
+        customer: me?.customerId as string,
+      },
     });
 
     return data.project.customer?.mints as [CollectionMint];
+  },
+  async mintHistory(me: Me, _, _context) {
+    const { data } = await holaplex.query<
+      GetCustomerMintHistoriesData,
+      GetCustomerVars
+    >({
+      fetchPolicy: "network-only",
+      query: GetCustomerMintHistories,
+      variables: {
+        project: process.env.HOLAPLEX_PROJECT_ID as string,
+        customer: me.customerId as string,
+      },
+    });
+
+    return data.project.customer?.mintHistories as MintHistory[];
+  },
+};
+export const queryResolvers: QueryResolvers<AppContext> = {
+  async collectible(_a, b, { dataSources: { holaplex } }) {
+    const { data } = await holaplex.query<GetDropData, GetDropVars>({
+      fetchPolicy: "network-only",
+      query: GetProjectDrop,
+      variables: {
+        project: process.env.HOLAPLEX_PROJECT_ID as string,
+        drop: DROP_ID_FROM_VOTE[b.vote] as string,
+      },
+    });
+
+    return data.project.drop as Drop;
   },
   async me(_a, _b, { session, dataSources: { user } }) {
     if (!session) {
@@ -116,7 +135,7 @@ export const queryResolvers: QueryResolvers<AppContext> = {
     }
 
     return null;
-  }
+  },
 };
 
 interface MintNftData {
@@ -135,7 +154,7 @@ interface TransferAssetVars {
   input: TransferAssetInput;
 }
 interface GetCustomerWalletData {
-  project: Pick<Project, 'customer'>;
+  project: Pick<Project, "customer">;
 }
 
 interface GetCustomerWalletVars {
@@ -151,7 +170,7 @@ const mutationResolvers: MutationResolvers<AppContext> = {
     }
 
     const user = await db.user.findFirst({
-      where: { email: session.user?.email }
+      where: { email: session.user?.email },
     });
 
     if (!user || !user.holaplexCustomerId) {
@@ -159,17 +178,17 @@ const mutationResolvers: MutationResolvers<AppContext> = {
     }
 
     const dropResponse = await holaplex.query<GetDropData, GetDropVars>({
-      fetchPolicy: 'network-only',
+      fetchPolicy: "network-only",
       query: GetProjectDrop,
       variables: {
         project: process.env.HOLAPLEX_PROJECT_ID as string,
-        drop: DROP_ID_FROM_VOTE[b.vote] as string
-      }
+        drop: DROP_ID_FROM_VOTE[b.vote] as string,
+      },
     });
 
     const blockchain = dropResponse.data.project.drop?.collection.blockchain;
 
-    let assetId = '';
+    let assetId = "";
     switch (blockchain) {
       case Blockchain.Solana:
         assetId = AssetType.Sol;
@@ -186,13 +205,13 @@ const mutationResolvers: MutationResolvers<AppContext> = {
       GetCustomerWalletData,
       GetCustomerWalletVars
     >({
-      fetchPolicy: 'network-only',
+      fetchPolicy: "network-only",
       query: GetCustomerWallet,
       variables: {
         project: process.env.HOLAPLEX_PROJECT_ID as string,
         customer: user.holaplexCustomerId,
-        assetId: assetId as AssetType
-      }
+        assetId: assetId as AssetType,
+      },
     });
 
     const customerWallets = customerResponse.data.project.customer?.wallet;
@@ -203,9 +222,9 @@ const mutationResolvers: MutationResolvers<AppContext> = {
       variables: {
         input: {
           drop: DROP_ID_FROM_VOTE[b.vote] as string,
-          recipient: recipient as string
-        }
-      }
+          recipient: recipient as string,
+        },
+      },
     });
 
     return data?.mintEdition.collectionMint as CollectionMint;
@@ -224,25 +243,26 @@ const mutationResolvers: MutationResolvers<AppContext> = {
       variables: {
         input: {
           id: b.id,
-          recipient: b.wallet
-        }
-      }
+          recipient: b.wallet,
+        },
+      },
     });
 
     return data?.transferAsset.mint as CollectionMint;
-  }
+  },
 };
 
-const typeDefs = await loadSchema('./schema.graphql', {
-  loaders: [new GraphQLFileLoader()]
+const typeDefs = await loadSchema("./schema.graphql", {
+  loaders: [new GraphQLFileLoader()],
 });
 
 const server = new ApolloServer<AppContext>({
   resolvers: {
     Query: queryResolvers,
-    Mutation: mutationResolvers
+    Mutation: mutationResolvers,
+    Me: meResolvers,
   },
-  typeDefs
+  typeDefs,
 });
 
 export default startServerAndCreateNextHandler(server, {
@@ -254,8 +274,8 @@ export default startServerAndCreateNextHandler(server, {
       dataSources: {
         db,
         holaplex,
-        user: new UserSource(holaplex, db)
-      }
+        user: new UserSource(holaplex, db),
+      },
     };
-  }
+  },
 });

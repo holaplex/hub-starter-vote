@@ -29,9 +29,13 @@ type AccessToken {
 }
 
 enum Action {
+  CREATE_COLLECTION
   CREATE_DROP
   CREATE_WALLET
+  MINT
+  MINT_COMPRESSED
   MINT_EDITION
+  RETRY_COLLECTION
   RETRY_DROP
   RETRY_MINT
   TRANSFER_ASSET
@@ -129,7 +133,7 @@ type Collection {
   """
   A list of all NFT mints from the collection, including both primary and secondary sales.
   """
-  mintHistories: [MintHistories!]
+  mintHistories: [MintHistory!]
 
   """
   The list of minted NFTs from the collection including the NFTs address and current owner's wallet address.
@@ -140,7 +144,7 @@ type Collection {
   """
   A list of all NFT purchases from the collection, including both primary and secondary sales.
   """
-  purchases: [MintHistories!] @deprecated(reason: "Use `mint_histories` instead")
+  purchases: [MintHistory!] @deprecated(reason: "Use `mint_histories` instead")
 
   """
   The royalties assigned to mints belonging to the collection expressed in basis points.
@@ -218,6 +222,32 @@ type CollectionMint {
 
   """The transaction signature associated with the NFT."""
   signature: String
+}
+
+type CollectionsMembers {
+  blockchain: String
+  count: Float
+  name: String
+  project_id: String
+  timestamp: TimeDimension
+}
+
+input CollectionsOrderByInput {
+  blockchain: OrderBy
+  count: OrderBy
+  name: OrderBy
+  project_id: OrderBy
+  timestamp: OrderBy
+}
+
+input CollectionsWhereInput {
+  AND: [CollectionsWhereInput!]
+  OR: [CollectionsWhereInput!]
+  blockchain: StringFilter
+  count: FloatFilter
+  name: StringFilter
+  project_id: StringFilter
+  timestamp: DateTimeFilter
 }
 
 input CreateCollectionInput {
@@ -428,6 +458,9 @@ type Customer {
   """The unique identifier for the customer record."""
   id: UUID!
 
+  """The NFTs minted by the customer."""
+  mintHistories: [MintHistory!]
+
   """The NFTs owned by any of the customers' wallets."""
   mints: [CollectionMint!]
 
@@ -446,12 +479,44 @@ type Customer {
   wallet(assetId: AssetType): [Wallet!]
 }
 
+type CustomersMembers {
+  count: Float
+  project_id: String
+  timestamp: TimeDimension
+}
+
+input CustomersOrderByInput {
+  count: OrderBy
+  project_id: OrderBy
+  timestamp: OrderBy
+}
+
+input CustomersWhereInput {
+  AND: [CustomersWhereInput!]
+  OR: [CustomersWhereInput!]
+  count: FloatFilter
+  project_id: StringFilter
+  timestamp: DateTimeFilter
+}
+
 """
 Implement the DateTime<FixedOffset> scalar
 
 The input/output is a string in RFC3339 format.
 """
 scalar DateTime
+
+input DateTimeFilter {
+  afterDate: String
+  beforeDate: String
+  equals: [String]
+  in: [String]
+  inDateRange: [String]
+  notEquals: [String]
+  notIn: [String]
+  notInDateRange: [String]
+  set: Boolean
+}
 
 input DeactivateMemberInput {
   id: UUID!
@@ -518,7 +583,7 @@ type Drop {
   projectId: UUID!
 
   """A list of all NFT purchases from this drop."""
-  purchases: [MintHistories!] @deprecated(reason: "Use `mint_histories` under `Collection` Object instead.")
+  purchases: [MintHistory!] @deprecated(reason: "Use `mint_histories` under `Collection` Object instead.")
 
   """
   The shutdown_at field represents the date and time in UTC when the drop was shutdown
@@ -635,6 +700,9 @@ type EventType {
 
 """An enumeration of event types that can be subscribed to by a webhook."""
 enum FilterType {
+  """Event triggered when a new collection is created"""
+  COLLECTION_CREATED
+
   """Event triggered when a new customer is created"""
   CUSTOMER_CREATED
 
@@ -650,6 +718,9 @@ enum FilterType {
   """Event triggered when a new drop is minted"""
   DROP_MINTED
 
+  """Event triggered when an NFT is minted to a collection"""
+  MINTED_TO_COLLECTION
+
   """Event triggered when a mint has been successfully transfered"""
   MINT_TRANSFERED
 
@@ -658,6 +729,18 @@ enum FilterType {
 
   """Event triggered when a new wallet is created for a project"""
   PROJECT_WALLET_CREATED
+}
+
+input FloatFilter {
+  equals: Float
+  gt: Float
+  gte: Float
+  in: [Float]
+  lt: Float
+  lte: Float
+  notEquals: Float
+  notIn: [Float]
+  set: Boolean
 }
 
 """The holder of a collection."""
@@ -675,12 +758,15 @@ type Holder {
   owns: Int!
 }
 
+"""Input object for importing a collection."""
 input ImportCollectionInput {
   collection: String!
   project: UUID!
 }
 
+"""Represents the result of a successful import collection mutation."""
 type ImportCollectionPayload {
+  """The status of the collection import."""
   status: CreationStatus!
 }
 
@@ -747,8 +833,11 @@ enum InviteStatus {
 scalar JSON
 
 type Me {
+  collectibles: [CollectionMint]
+  customerId: String
   email: String
   image: String
+  mintHistory: [MintHistory]
   name: String
   wallets: [Wallet]
 }
@@ -821,7 +910,7 @@ type MetadataJson {
   externalUrl: String
   id: UUID!
   identifier: String!
-  image: String
+  image: String!
 
   """The image URI for the NFT."""
   imageOriginal: String!
@@ -884,7 +973,10 @@ input MetadataJsonPropertyInput {
 Represents input data for `mint_edition` mutation with a UUID and recipient as fields
 """
 input MintDropInput {
+  """The ID of the drop to mint to"""
   drop: UUID!
+
+  """The recipient of the mint"""
   recipient: String!
 }
 
@@ -893,15 +985,19 @@ type MintEditionPayload {
   collectionMint: CollectionMint!
 }
 
-type MintHistories {
-  """The ID of the collection that facilitated the purchase, if any."""
+"""A record of a minted NFT."""
+type MintHistory {
+  """The ID of the collection that facilitated the mint, if any."""
   collectionId: UUID!
 
   """The date and time when the purchase was created."""
   createdAt: DateTime!
   id: UUID!
 
-  """The ID of the NFT being purchased."""
+  """The minted NFT."""
+  mint: CollectionMint
+
+  """The ID of the NFT minted."""
   mintId: UUID!
 
   """The status of the creation of the NFT."""
@@ -914,16 +1010,34 @@ type MintHistories {
   wallet: String!
 }
 
+"""
+Represents input data for `mint_to_collection` mutation with a collection ID, recipient, metadata, and optional seller fee basis points as fields
+"""
 input MintToCollectionInput {
+  """The ID of the collection to mint to"""
   collection: UUID!
-  compressed: Boolean!
+  compressed: Boolean
+
+  """
+  The creators to be assigned to the NFT.
+  For Solana, this can be up to five creators. If the project treasury wallet is set as a creator and verified set to true the creator will be verified on chain.
+  For Polygon, this can be only 1 creator.
+  """
   creators: [CreatorInput!]!
+
+  """The metadata of the mint"""
   metadataJson: MetadataJsonInput!
+
+  """The recipient of the mint"""
   recipient: String!
+
+  """The optional seller fee basis points"""
   sellerFeeBasisPoints: Int
 }
 
+"""Represents payload data for `mint_to_collection` mutation"""
 type MintToCollectionPayload {
+  """The minted NFT"""
   collectionMint: CollectionMint!
 }
 
@@ -936,9 +1050,8 @@ type Mutation {
   acceptInvite(input: AcceptInviteInput!): AcceptInvitePayload!
 
   """
-  This mutation creates a new NFT drop and its associated collection. The drop returns immediately with a creation status of CREATING. You can [set up a webhook](https://docs.holaplex.dev/hub/For%20Developers/webhooks-overview) to receive a notification when the drop is ready to be minted.
-  Error
-  If the drop cannot be saved to the database or fails to be emitted for submission to the desired blockchain, the mutation will result in an error.
+  This mutation creates a new NFT collection. The collection returns immediately with a creation status of CREATING. You can [set up a webhook](https://docs.holaplex.dev/hub/For%20Developers/webhooks-overview) to receive a notification when the collection is ready to be minted.
+  For Solana, the collection is a sized Metaplex certified collection.
   """
   createCollection(input: CreateCollectionInput!): CreateCollectionPayload!
 
@@ -1025,6 +1138,10 @@ type Mutation {
   This function fails if ...
   """
   editWebhook(input: EditWebhookInput!): EditWebhookPayload!
+
+  """
+  This mutation imports a Solana collection. See the [guide](https://docs.holaplex.com/hub/Guides/import-collection) for importing instructions.
+  """
   importSolanaCollection(input: ImportCollectionInput!): ImportCollectionPayload!
 
   """
@@ -1041,13 +1158,14 @@ type Mutation {
   If the mint cannot be saved to the database or fails to be emitted for submission to the desired blockchain, the mutation will result in an error.
   """
   mintEdition(input: MintDropInput!): MintEditionPayload!
-  mintToCollection(input: MintToCollectionInput!): MintToCollectionPayload!
 
   """
-  This mutation allows updating a drop and it's associated collection by ID.
-  It returns an error if it fails to reach the database, emit update events or assemble the on-chain transaction.
-  Returns the `PatchDropPayload` object on success.
+  This mutation mints either a compressed or standard NFT to a collection.
+  For Solana, the mint is verified and the collection size incremented.
   """
+  mintToCollection(input: MintToCollectionInput!): MintToCollectionPayload!
+
+  """Update a collection attributes or creators."""
   patchCollection(input: PatchCollectionInput!): PatchCollectionPayload!
 
   """
@@ -1075,15 +1193,7 @@ type Mutation {
   """
   resumeDrop(input: ResumeDropInput!): ResumeDropPayload!
 
-  """
-  This mutation retries an existing drop.
-  The drop returns immediately with a creation status of CREATING.
-  You can [set up a webhook](https://docs.holaplex.dev/hub/For%20Developers/webhooks-overview) to receive a notification when the drop is ready to be minted.
-  Errors
-  The mutation will fail if the drop and its related collection cannot be located,
-  if the transaction response cannot be built,
-  or if the transaction event cannot be emitted.
-  """
+  """This mutation tries to re-create a failed collection."""
   retryCollection(input: RetryCollectionInput!): CreateCollectionPayload!
 
   """
@@ -1116,23 +1226,8 @@ type Mutation {
 
   """
   Transfers an asset from one user to another on a supported blockchain network.
-  
-  # Arguments
-  
-  * `self` - A reference to the current instance of the struct.
-  * `ctx` - A context object containing application context data.
-  * `input` - A TransferAssetInput struct containing the input data for the asset transfer.
-  
-  # Returns
-  
-  Returns a Result containing a TransferAssetPayload struct with the updated mint information upon success.
-  
-  # Errors
-  This function returns an error :
-  If the specified blockchain is not currently supported.
-  If the specified mint does not exist.
-  If there is an error while making a transfer request to the Solana blockchain.
-  If there is an error while sending the TransferAsset event to the event producer.
+  The mutation supports transferring standard or compressed NFTs.
+  The mutation is rejected if the wallet address is not managed by HUB.
   """
   transferAsset(input: TransferAssetInput!): TransferAssetPayload!
   transferMint(id: String!, wallet: String!): CollectionMint
@@ -1146,6 +1241,11 @@ ISO 8601 combined date and time without timezone.
 * `2015-07-01T08:59:60.123`,
 """
 scalar NaiveDateTime
+
+enum OrderBy {
+  asc
+  desc
+}
 
 """
 A Holaplex organization is the top-level account within the Holaplex ecosystem. Each organization has a single owner who can invite members to join. Organizations use projects to organize NFT campaigns or initiatives.
@@ -1278,6 +1378,23 @@ type Organization {
   webhooks: [Webhook!]
 }
 
+type OrganizationsMembers {
+  count: Float
+  name: String
+}
+
+input OrganizationsOrderByInput {
+  count: OrderBy
+  name: OrderBy
+}
+
+input OrganizationsWhereInput {
+  AND: [OrganizationsWhereInput!]
+  OR: [OrganizationsWhereInput!]
+  count: FloatFilter
+  name: StringFilter
+}
+
 """
 The owner of the Holaplex organization, who is the individual that created the organization.
 """
@@ -1307,7 +1424,7 @@ type Owner {
   userId: UUID!
 }
 
-"""Input object for patching a drop and associated collection by ID"""
+"""Input object for patching a collection by ID."""
 input PatchCollectionInput {
   """The creators of the drop"""
   creators: [CreatorInput!]
@@ -1319,9 +1436,9 @@ input PatchCollectionInput {
   metadataJson: MetadataJsonInput
 }
 
-"""Represents the result of a successful patch drop mutation."""
+"""Represents the result of a successful patch collection mutation."""
 type PatchCollectionPayload {
-  """The drop that has been patched."""
+  """The collection that has been patched."""
   collection: Collection!
 }
 
@@ -1419,6 +1536,26 @@ type Project {
   treasury: Treasury
 }
 
+type ProjectsMembers {
+  count: Float
+  name: String
+  organization_id: String
+}
+
+input ProjectsOrderByInput {
+  count: OrderBy
+  name: OrderBy
+  organization_id: OrderBy
+}
+
+input ProjectsWhereInput {
+  AND: [ProjectsWhereInput!]
+  OR: [ProjectsWhereInput!]
+  count: FloatFilter
+  name: StringFilter
+  organization_id: StringFilter
+}
+
 type Query {
   collectible(vote: Vote!): Drop
 
@@ -1429,6 +1566,7 @@ type Query {
   This function fails if it fails to get `CreditsClient` or if blockchain enum conversion fails.
   """
   creditSheet: [ActionCost!]!
+  cube(limit: Int, offset: Int, orderBy: RootOrderByInput, renewQuery: Boolean, timezone: String, where: RootWhereInput): [Result!]!
 
   """
   Returns a list of event types that an external service can subscribe to.
@@ -1459,11 +1597,17 @@ type Query {
 
   """Retrieve a user identity by providing their ID."""
   user(id: UUID!): User
-  userCollectibles: [CollectionMint]
 }
 
 input ReactivateMemberInput {
   id: UUID!
+}
+
+type Result {
+  collections(orderBy: CollectionsOrderByInput, where: CollectionsWhereInput): CollectionsMembers!
+  customers(orderBy: CustomersOrderByInput, where: CustomersWhereInput): CustomersMembers!
+  organizations(orderBy: OrganizationsOrderByInput, where: OrganizationsWhereInput): OrganizationsMembers!
+  projects(orderBy: ProjectsOrderByInput, where: ProjectsWhereInput): ProjectsMembers!
 }
 
 """Represents input fields for resuming a paused drop."""
@@ -1477,6 +1621,7 @@ type ResumeDropPayload {
   drop: Drop!
 }
 
+"""Input object for retrying a collection by ID."""
 input RetryCollectionInput {
   id: UUID!
 }
@@ -1497,6 +1642,22 @@ type RetryMintEditionPayload {
   collectionMint: CollectionMint!
 }
 
+input RootOrderByInput {
+  collections: CollectionsOrderByInput
+  customers: CustomersOrderByInput
+  organizations: OrganizationsOrderByInput
+  projects: ProjectsOrderByInput
+}
+
+input RootWhereInput {
+  AND: [RootWhereInput!]
+  OR: [RootWhereInput!]
+  collections: CollectionsWhereInput
+  customers: CustomersWhereInput
+  organizations: OrganizationsWhereInput
+  projects: ProjectsWhereInput
+}
+
 """Represents the input fields for shutting down a drop"""
 input ShutdownDropInput {
   drop: UUID!
@@ -1506,6 +1667,32 @@ input ShutdownDropInput {
 type ShutdownDropPayload {
   """Drop that has been shutdown"""
   drop: Drop!
+}
+
+input StringFilter {
+  contains: [String]
+  endsWith: [String]
+  equals: String
+  in: [String]
+  notContains: [String]
+  notEndsWith: [String]
+  notEquals: String
+  notIn: [String]
+  notStartsWith: [String]
+  set: Boolean
+  startsWith: [String]
+}
+
+type TimeDimension {
+  day: DateTime!
+  hour: DateTime!
+  minute: DateTime!
+  month: DateTime!
+  quarter: DateTime!
+  second: DateTime!
+  value: DateTime!
+  week: DateTime!
+  year: DateTime!
 }
 
 input TransferAssetInput {

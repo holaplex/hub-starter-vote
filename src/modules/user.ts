@@ -46,7 +46,8 @@ export default class UserSource {
       name: user?.name,
       email: user?.email,
       image: user?.image,
-      wallets: data.project.customer?.treasury?.wallets
+      wallets: data.project.customer?.treasury?.wallets,
+      customerId: user?.holaplexCustomerId,
     } as Me;
   }
 }

@@ -6,6 +6,7 @@ declare module '*/customer.graphql' {
 export const CreateCustomerWallet: DocumentNode;
 export const GetCustomerWallets: DocumentNode;
 export const GetCustomerTreasury: DocumentNode;
+export const GetCustomerMintHistories: DocumentNode;
 export const GetCustomerCollections: DocumentNode;
 export const GetCustomerWallet: DocumentNode;
 
@@ -45,7 +46,6 @@ declare module '*/collectible.graphql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;
   export const GetCollectible: DocumentNode;
-export const GetUserCollectibles: DocumentNode;
 
   export default defaultDocument;
 }
@@ -55,6 +55,8 @@ declare module '*/me.graphql' {
   import { DocumentNode } from 'graphql';
   const defaultDocument: DocumentNode;
   export const GetMe: DocumentNode;
+export const GetMeCollectiblesPage: DocumentNode;
+export const GetMeHomePage: DocumentNode;
 
   export default defaultDocument;
 }
