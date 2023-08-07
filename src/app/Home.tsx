@@ -312,7 +312,7 @@ export default function Home({ session }: HomeProps) {
                 <a
                   rel="noreferrer"
                   target="_blank"
-                  href="/https://docs.google.com/document/d/1HgjsyC6P4IlAwh8__NCm4tNoz0xddBtr5VTfa80pugM/edit?usp=sharing"
+                  href="https://docs.google.com/document/d/1HgjsyC6P4IlAwh8__NCm4tNoz0xddBtr5VTfa80pugM/edit?usp=sharing"
                   className="text-cta text-xs font-medium mt-2"
                 >
                   View official rules
