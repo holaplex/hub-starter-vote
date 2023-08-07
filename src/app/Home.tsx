@@ -206,7 +206,7 @@ export default function Home({ session }: HomeProps) {
               BLOCKCHAIN BATTLE!
             </span>
             <p className="text-neautraltext text-sm md:text-base max-w-2xl text-center">
-              Win an SMB Gen3 or Y00ts by voting (aka minting) for your favorite
+              Win an SMB Gen2 or Y00ts by voting (aka minting) for your favorite
               blockchain! Voting will be open for 3 days, whichever blockchain
               gets the most mints, wins. Those who vote for the winning
               blockchain will get a chance to win the NFT! Those who vote for
