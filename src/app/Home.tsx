@@ -202,9 +202,18 @@ export default function Home({ session }: HomeProps) {
               🎉 To celebrate & showcase HUB’s multi-chain support Holaplex
               presents…. 🎉
             </span>
-            <span className="text-white text-4xl md:text-6xl font-semibold md:font-extrabold mt-3">
+            <span className="text-white text-4xl md:text-6xl font-semibold md:font-extrabold my-3">
               BLOCKCHAIN BATTLE!
             </span>
+            <p className="text-neautraltext text-sm md:text-base max-w-2xl text-center">
+              Win an SMB Gen3 or Y00ts by voting (aka minting) for your favorite
+              blockchain! Voting will be open for 3 days, whichever blockchain
+              gets the most mints, wins. Those who vote for the winning
+              blockchain will get a chance to win the NFT! Those who vote for
+              the losing blockchain get… NOTHING, so be careful of who you vote
+              for! It’s time to find out which blockchain has the most active
+              community!
+            </p>
 
             <div className="flex gap-3 md:gap-8 items-center mt-6 justify-around">
               <div>
@@ -300,12 +309,14 @@ export default function Home({ session }: HomeProps) {
                 <span className="text-white text-lg md:text-2xl font-semibold mt-12">
                   Mint your raffle ticket to make your vote
                 </span>
-                <Link
-                  href="/rules"
+                <a
+                  rel="noreferrer"
+                  target="_blank"
+                  href="/https://docs.google.com/document/d/1HgjsyC6P4IlAwh8__NCm4tNoz0xddBtr5VTfa80pugM/edit?usp=sharing"
                   className="text-cta text-xs font-medium mt-2"
                 >
                   View official rules
-                </Link>
+                </a>
 
                 <div className="flex gap-6 mt-6">
                   <button
