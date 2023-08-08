@@ -330,7 +330,7 @@ export default function Home({ session }: HomeProps) {
                     onClick={() => onMint(Vote.A)}
                     disabled={loading}
                   >
-                    {loading ? <BounceLoader size={21} color="#212122" /> : <CryptoIcon type={collectibleB!.collection.blockchain} />}
+                    {loading ? <BounceLoader size={21} color="#212122" /> : <CryptoIcon type={collectibleA!.collection.blockchain} />}
                     {`Mint ticket on ${collectibleA!.collection.blockchain}`}
                   </button>
                   <button
