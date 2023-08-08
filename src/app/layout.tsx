@@ -1,6 +1,7 @@
 import 'react-toastify/dist/ReactToastify.css';
 import './globals.css';
 import { Inter } from 'next/font/google';
+import { Metadata } from 'next';
 import clsx from 'clsx';
 import App from './App';
 import { getServerSession } from 'next-auth/next';
@@ -13,6 +14,11 @@ import db from '@/modules/db';
 const inter = Inter({ subsets: ['latin'] });
 
 const userSource = new UserSource(holaplex, db);
+
+export const metadata: Metadata = {
+  title: 'Holaplex Blockchain Battle',
+  description: 'To celebrate & showcase HUB’s multi-chain support Holaplex is hosting blockchain battle between Solana and Polygon',
+}
 
 export default async function Layout({
   children,

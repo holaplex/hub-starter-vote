@@ -25,6 +25,7 @@ import CryptoIcon from "../components/CryptoIcon";
 import { GetCollectible } from "@/queries/collectible.graphql";
 import { useRouter } from "next/navigation";
 import { Modal } from "@holaplex/ui-library-react";
+import { BounceLoader } from "react-spinners";
 
 interface MintData {
   mint: CollectionMint;
@@ -100,6 +101,10 @@ export default function Home({ session }: HomeProps) {
   });
 
   const onMint = (vote: Vote) => {
+    if (loading) {
+      return;
+    }
+
     if (!session) {
       router.push("/login");
       return;
@@ -321,20 +326,20 @@ export default function Home({ session }: HomeProps) {
                 <div className="flex gap-6 mt-6">
                   <button
                     className="font-bold rounded-full text-contrast py-3 px-6 transition hover:opacity-80 flex gap-2 items-center
-                bg-gradient-to-r from-[#71EA9F] via-[#8AA7CC] to-[#A16AF6]"
+                bg-gradient-to-r from-[#71EA9F] via-[#8AA7CC] to-[#A16AF6] disabled:opacity-70"
                     onClick={() => onMint(Vote.A)}
                     disabled={loading}
                   >
-                    <CryptoIcon type={collectibleA!.collection.blockchain} />
+                    {loading ? <BounceLoader size={21} color="#212122" /> : <CryptoIcon type={collectibleB!.collection.blockchain} />}
                     {`Mint ticket on ${collectibleA!.collection.blockchain}`}
                   </button>
                   <button
                     className="font-bold rounded-full text-contrast py-3 px-6 transition hover:opacity-80 flex gap-2 items-center 
-                bg-gradient-to-r from-[#8A46FF] to-[#6E38CC]"
+                bg-gradient-to-r from-[#8A46FF] to-[#6E38CC] disabled:opacity-70"
                     onClick={() => onMint(Vote.B)}
                     disabled={loading}
                   >
-                    <CryptoIcon type={collectibleB!.collection.blockchain} />
+                    {loading ? <BounceLoader size={21} color="#212122" /> : <CryptoIcon type={collectibleB!.collection.blockchain} />}
                     {`Mint ticket on ${collectibleB!.collection.blockchain}`}
                   </button>
                 </div>
