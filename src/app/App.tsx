@@ -35,7 +35,7 @@ export default function App({
                 href="https://docs.google.com/document/d/1HgjsyC6P4IlAwh8__NCm4tNoz0xddBtr5VTfa80pugM/edit?usp=sharing"
                 className="hover:underline"
               >
-                Official Rules
+                Official rules
               </a>
             </li>
             <li>
